@@ -1,0 +1,85 @@
+.billing__body {
+  font-size: 12px;
+  display: grid;
+  grid-template-columns: [first item-start] 0.5rem [subitem-start] 1fr [item-end qty-start] auto [qty-end cost-start] auto [cost-end extra-start] auto [extra-end total-start] auto [total-end last];
+  column-gap: 1rem;
+  padding-inline: 0.25rem;
+  padding-block: 0.25rem;
+}
+
+.billing__header,
+.billing__item {
+  grid-column: item-start / last;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+.billing__header {
+  font-weight: bold;
+  & > div {
+    text-align: center;
+    border-bottom: solid 1px black;
+  }
+  & > div:nth-child(1) {
+    text-align: left;
+    grid-column: item-start/item-end;
+  }
+  & > div:nth-child(2) {
+    grid-column: qty-start/qty-end;
+  }
+  & > div:nth-child(3) {
+    grid-column: cost-start/cost-end;
+  }
+  & > div:nth-child(4) {
+    grid-column: extra-start/extra-end;
+  }
+  & > div:nth-child(5) {
+    grid-column: total-start/total-end;
+  }
+}
+
+.billing__item {
+  &.billing__item--important {
+    font-weight: bold;
+  }
+  &.billing__item--sub {
+    grid-column: subitem-start / last;
+
+    & .item {
+      grid-column: subitem-start/item-end;
+    }
+  }
+
+  & .item {
+    grid-column: item-start/item-end;
+  }
+  & .total,
+  & .extra,
+  & .cost {
+    display: flex;
+    justify-content: space-between;
+    &:before {
+      content: "Rp.";
+      padding-right: 2rem;
+    }
+  }
+
+  & .qty,
+  & .total,
+  & .extra,
+  & .cost {
+    text-align: right;
+  }
+  & .qty {
+    grid-column: qty-start/qty-end;
+  }
+  & .total {
+    grid-column: total-start/total-end;
+  }
+  & .extra {
+    grid-column: extra-start/extra-end;
+  }
+  & .cost {
+    grid-column: cost-start/cost-end;
+  }
+}

@@ -1,0 +1,19 @@
+@use "_pemeriksaan";
+@use "_hasil";
+@use "_gambar";
+
+.radiologi {
+  margin-inline: 0.5rem;
+  & .radiologi__title {
+    padding: 0.25rem;
+    border: solid 1px black;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  & .radiologi__body {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+}

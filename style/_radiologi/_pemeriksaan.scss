@@ -1,0 +1,77 @@
+.radiologi-pemeriksaan-list {
+  display: grid;
+  grid-template-columns: auto auto auto auto 1fr;
+
+  & .radiologi-pemeriksaan-list__title {
+    grid-column: 1/2;
+    grid-row-start: 1;
+    grid-row-end: var(--row-length);
+
+    border: black solid 1px;
+    padding: 0.25rem;
+
+    margin-right: 0.25rem;
+    writing-mode: sideways-lr;
+    text-align: center;
+  }
+
+  & .radiologi-pemeriksaan-list__item {
+    grid-column: 2/6;
+
+    display: grid;
+    grid-template-columns: subgrid;
+
+    border: black solid 1px;
+    counter-reset: num;
+
+    & .radiologi-pemeriksaan {
+      grid-column: 1/5;
+      display: grid;
+      grid-template-columns: subgrid;
+
+      &::before {
+        grid-column: 1/2;
+        grid-row: 1/5;
+        content: counter(num) ".";
+        counter-increment: num;
+
+        border-right: 1px solid black;
+
+        font-weight: bold;
+        padding-inline: 0.25rem;
+      }
+
+      & .tricolumn,
+      & .radiologi-pemeriksaan__pemeriksaan-title {
+        padding-inline: 0.25rem;
+      }
+
+      & .tricolumn {
+        gap: 0 1rem;
+      }
+
+      & .tricolumn,
+      & .radiologi-pemeriksaan__pemeriksaan {
+        grid-column: 2/5;
+      }
+
+      & .radiologi-pemeriksaan__pemeriksaan {
+        & .tricolumn {
+          grid-column: 1/4;
+          &:has(div:nth-child(3):empty) {
+            display: none;
+          }
+        }
+        & .radiologi-pemeriksaan__pemeriksaan-title {
+          border-top: solid 1px black;
+          border-bottom: solid 1px black;
+        }
+        & .radiologi-pemeriksaan__pemeriksaan-body {
+          font-size: 10px;
+          display: grid;
+          grid-template-columns: auto auto 1fr;
+        }
+      }
+    }
+  }
+}

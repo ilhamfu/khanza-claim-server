@@ -1,0 +1,38 @@
+.penilaian-awal-igd__body {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+
+  & .tricolumn {
+    grid-column: 1/-1;
+    column-gap: 1rem;
+    padding-inline: 0.25rem;
+  }
+}
+
+.penilaian-awal-igd__info {
+  grid-column: 1/-1;
+  border-block: 1px solid black;
+  padding: 0.25rem;
+  font-weight: bold;
+
+  &:first-child {
+    border-top: none;
+  }
+}
+.penilaian-awal-igd__full {
+  padding-block: 0.25rem;
+  padding-inline: 0.125rem;
+  white-space: pre-wrap;
+  grid-column: 1/-1;
+}
+
+.penilaian-awal-igd__detail {
+  grid-column: 1/-1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  & > div {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+  }
+}

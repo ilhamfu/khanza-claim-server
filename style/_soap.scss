@@ -1,0 +1,40 @@
+.soap-list {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.25rem;
+}
+.soap {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  border: solid 1px black;
+
+  padding-block: 0.25rem;
+
+  & .tricolumn {
+    padding-inline: 0.25rem;
+    column-gap: 1rem;
+    grid-column: 1/-1;
+
+    & > *:nth-child(3) {
+      white-space: pre-wrap;
+    }
+  }
+
+  & > .tricolumn:has(> div:nth-child(3):empty) {
+    display: none;
+  }
+}
+
+.soap__obj {
+  border-block: 1px solid black;
+  grid-column: 1/-1;
+  padding-block: 0.25rem;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.soap__obj-group {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+}

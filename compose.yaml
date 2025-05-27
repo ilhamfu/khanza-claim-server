@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    command:
+      - -v
+      - export
+      - "2025/01/01/000001"
+    volumes:
+      - ./exported:/app/exported
+    environment:
+      DATABASE_URL: "mysql://root:tiitrsuGmc!@192.168.1.111:3306/sik"
+      APP__RS_NAME: "RSU GLADISH MEDICAL CENTER"
+      APP__WEBDRIVER_URL: "http://localhost:4444"
+      APP__KHANZA_RESOURCE: "http://192.168.1.111/webapps"

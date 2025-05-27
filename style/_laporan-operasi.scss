@@ -1,0 +1,60 @@
+.laporan-operasi-list {
+  font-size: 12px;
+  margin-inline: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  row-gap: 4px;
+
+  & .laporan-operasi-list__title {
+    padding: 0.25rem;
+    border: solid 1px black;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+  }
+  & .laporan-operasi-list__body {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.25rem;
+    counter-reset: operasi;
+
+    & .laporan-operasi {
+      display: grid;
+      grid-template-columns: 1.5rem auto auto 1fr;
+      border: solid 1px black;
+      counter-increment: operasi;
+
+      break-inside: avoid;
+
+      &::before {
+        content: counter(operasi) ".";
+        font-weight: bold;
+        grid-column: 1/2;
+        grid-row: 1/8;
+        border-right: solid 1px black;
+        padding: 0.25rem;
+      }
+
+      & .laporan_operasi__laporan {
+        grid-column: 2/5;
+        & > div:nth-child(1) {
+          text-align: center;
+          font-weight: bold;
+          border-block: 1px solid black;
+        }
+        & > div:nth-child(2) {
+          padding-inline: 0.25rem;
+          white-space: pre-wrap;
+        }
+      }
+
+      & .tricolumn {
+        column-gap: 1rem;
+        grid-template-columns: subgrid;
+        display: grid;
+        grid-column: 2/5;
+        margin-left: 0.25rem;
+      }
+    }
+  }
+}

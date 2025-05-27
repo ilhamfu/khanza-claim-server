@@ -1,0 +1,50 @@
+.resume {
+  & .resume__body {
+    display: grid;
+    padding: 0.5rem;
+    grid-template-columns: auto auto 1fr;
+    & > .tricolumn {
+      grid-column: 1/4;
+      column-gap: 8px;
+      & > div:nth-child(3) {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  }
+
+  & .resume__detail-list {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.25rem;
+    & .resume__detail {
+      & .resume__detail-title {
+        border-bottom: black solid 1px;
+        padding: 0.25rem 0.5rem;
+        font-weight: bold;
+      }
+
+      & .resume__detail-body {
+        display: grid;
+        padding: 0.25rem 0.5rem;
+        column-gap: 8px;
+        grid-template-columns: auto auto 1fr;
+
+        & .resume__detail-text {
+          grid-column: 1/4;
+          white-space: pre-wrap;
+
+          &:empty::before {
+            content: "-";
+          }
+        }
+
+        & .resume__detail-many {
+          display: grid;
+          grid-column: 1/4;
+          grid-template-columns: subgrid;
+        }
+      }
+    }
+  }
+}

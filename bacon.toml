@@ -1,0 +1,6 @@
+[jobs.web]
+command = ["cargo", "run"]
+background = false
+default_watch = false
+allow_warnings = true
+need_stdout = true

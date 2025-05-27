@@ -1,0 +1,26 @@
+.hasil-usg__body {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  padding-block: 0.25rem;
+  break-inside: avoid;
+  & .tricolumn {
+    margin-inline: 0.25rem;
+    column-gap: 1rem;
+  }
+
+  & img {
+    margin-inline: auto;
+    margin-block: 1rem;
+
+    @media print {
+      & {
+        max-height: 200mm;
+      }
+    }
+  }
+
+  & img,
+  & .tricolumn {
+    grid-column: 1/-1;
+  }
+}

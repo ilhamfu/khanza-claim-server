@@ -1,0 +1,59 @@
+.triase__body {
+  padding: 0.25rem;
+  border: solid 1px black;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+
+  & .triase__pemeriksaan,
+  & .triase__subpemeriksaan,
+  & .tricolumn {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1/4;
+  }
+
+  & .triase__info {
+    grid-column: 1/-1;
+    text-align: center;
+    font-weight: bold;
+    background: #ffdcce;
+  }
+
+  & .tricolumn {
+    column-gap: 1rem;
+    align-items: center;
+  }
+
+  & .triase__subpemeriksaan .tricolumn > div:nth-child(1) {
+    padding-left: 1rem;
+  }
+
+  & .triase__pemeriksaan {
+    &.triase__pemeriksaan--immediate {
+      --triase-pemeriksaan-color: white;
+      --triase-pemeriksaan-bg: #aa0000;
+    }
+    &.triase__pemeriksaan--emergency {
+      --triase-pemeriksaan-color: white;
+      --triase-pemeriksaan-bg: #ff0000;
+    }
+    &.triase__pemeriksaan--urgent {
+      --triase-pemeriksaan-color: white;
+      --triase-pemeriksaan-bg: #c8c800;
+    }
+    &.triase__pemeriksaan--semi-urgent {
+      --triase-pemeriksaan-color: white;
+      --triase-pemeriksaan-bg: #00aa00;
+    }
+    &.triase__pemeriksaan--non-urgent {
+      --triase-pemeriksaan-color: white;
+      --triase-pemeriksaan-bg: #969696;
+    }
+    & .tricolumn > div:nth-child(3) {
+      color: var(--triase-pemeriksaan-color);
+      background: var(--triase-pemeriksaan-bg);
+      font-weight: bold;
+      padding: 0.125rem;
+    }
+  }
+}

@@ -1,0 +1,10 @@
+.basic-detail {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  padding-inline: 0.25rem;
+  padding-block: 0.25rem;
+  & .tricolumn {
+    grid-column: 1/-1;
+    column-gap: 1rem;
+  }
+}
