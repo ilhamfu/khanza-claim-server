@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use assesmen_awal_igd::{get_assesmen_awal_igd, AssesmenAwalIGD};
 use assesmen_kebidanan::{get_assesmen_bidan, AssesmenKebidanan};
 use berkas_digital::{get_berkas_digital, BerkasDigial};
 use billing::{get_billing, Billing, GetBillingError};
@@ -19,7 +18,6 @@ use spri::{get_spri, Spri};
 use sqlx::MySqlPool;
 use triase::{get_triase, Triase};
 
-pub mod assesmen_awal_igd;
 pub mod assesmen_kebidanan;
 pub mod berkas_digital;
 pub mod billing;
@@ -55,7 +53,6 @@ pub struct DetailRawat {
     pub hasil_usg: Option<HasilUsg>,
     pub dpjp_ranap: Vec<DpjpRanap>,
     pub soap: Vec<Soap>,
-    pub igd_ralan: Option<AssesmenAwalIGD>,
 }
 
 impl Display for DetailRawat {
@@ -78,45 +75,43 @@ pub enum GetRawatConstraintError {
     SepNotFound,
     #[error("medical checkup is inpatient but it's SPRI not found")]
     SpriNotFound,
-    #[error("medical checkup is inpatient but it's Resume not found")]
-    ResumeNotFound,
     #[error("medical checkup is ER but it's triage not found")]
     TriageNotFound,
 }
 
 #[derive(thiserror::Error, Debug)]
 pub enum GetRawatProcessError {
-    #[error("failed to fetch reg_periksa")]
+    #[error("failed to fetch reg_periksa : {0}")]
     RegPeriksa(#[source] sqlx::Error),
-    #[error("failed to fetch resume")]
+    #[error("failed to fetch resume : {0}")]
     Resume(#[source] sqlx::Error),
-    #[error("failed to fetch resume")]
+    #[error("failed to fetch resume : {0}")]
     Lab(#[source] sqlx::Error),
-    #[error("failed to fetch operasi")]
+    #[error("failed to fetch operasi : {0}")]
     Operasi(#[source] sqlx::Error),
-    #[error("failed to fetch sep")]
+    #[error("failed to fetch sep : {0}")]
     Sep(#[source] sqlx::Error),
-    #[error("failed to fetch spri")]
+    #[error("failed to fetch spri : {0}")]
     Spri(#[source] sqlx::Error),
-    #[error("failed to fetch triase")]
+    #[error("failed to fetch triase : {0}")]
     Triase(#[source] sqlx::Error),
-    #[error("failed to fetch assesmen_kebidanan")]
+    #[error("failed to fetch assesmen_kebidanan : {0}")]
     AssesmenBidan(#[source] sqlx::Error),
-    #[error("failed to fetch berkas_digital")]
+    #[error("failed to fetch berkas_digital : {0}")]
     BerkasDigital(#[source] sqlx::Error),
-    #[error("failed to fetch laporan_operasi")]
+    #[error("failed to fetch laporan_operasi : {0}")]
     LaporanOperasi(#[source] sqlx::Error),
-    #[error("failed to fetch billing")]
+    #[error("failed to fetch billing : {0}")]
     Billing(#[source] GetBillingError),
-    #[error("failed to fetch hasil_usg")]
+    #[error("failed to fetch hasil_usg : {0}")]
     HasilUsg(#[source] sqlx::Error),
-    #[error("failed to fetch pemeriksaan_radiologi")]
+    #[error("failed to fetch pemeriksaan_radiologi : {0}")]
     PemeriksaanRadiologi(#[source] sqlx::Error),
-    #[error("failed to fetch dpjp_ranap")]
+    #[error("failed to fetch dpjp_ranap : {0}")]
     DpjpRanap(#[source] sqlx::Error),
-    #[error("failed to fetch soap")]
+    #[error("failed to fetch soap : {0}")]
     Soap(#[source] sqlx::Error),
-    #[error("failed to fetch assesmen_awal_igd")]
+    #[error("failed to fetch assesmen_awal_igd : {0}")]
     AssesmenAwalIgd(#[source] sqlx::Error),
 }
 
@@ -150,8 +145,6 @@ pub async fn get_rawat(
 
     let dpjp_ranap = get_dpjp_ranap(db, no_rawat).map_err(GetRawatProcessError::DpjpRanap);
     let soap = get_soap(db, &periksa).map_err(GetRawatProcessError::Soap);
-    let igd_ralan =
-        get_assesmen_awal_igd(db, &periksa).map_err(GetRawatProcessError::AssesmenAwalIgd);
 
     let (
         sep,
@@ -168,7 +161,6 @@ pub async fn get_rawat(
         usg,
         dpjp_ranap,
         soap,
-        igd_ralan,
     ) = tokio::try_join!(
         sep,
         spri,
@@ -184,20 +176,16 @@ pub async fn get_rawat(
         usg,
         dpjp_ranap,
         soap,
-        igd_ralan
     )?;
 
     let Some(sep) = sep else {
         return Err(GetRawatConstraintError::SepNotFound.into());
     };
-    if periksa.status_lanjut == "Ranap" {
-        if spri.is_none() {
-            return Err(GetRawatConstraintError::SpriNotFound.into());
-        }
-        if resume.ranap.is_none() {
-            return Err(GetRawatConstraintError::ResumeNotFound.into());
-        }
+
+    if periksa.status_lanjut == "Ranap" && spri.is_none() {
+        return Err(GetRawatConstraintError::SpriNotFound.into());
     }
+
     if (periksa.kode_poli == "IGDK" || periksa.kode_poli == "PNK") && triase.is_none() {
         return Err(GetRawatConstraintError::TriageNotFound.into());
     }
@@ -218,7 +206,6 @@ pub async fn get_rawat(
         hasil_usg: usg,
         dpjp_ranap,
         soap,
-        igd_ralan,
     };
 
     Ok(Some(rawat))

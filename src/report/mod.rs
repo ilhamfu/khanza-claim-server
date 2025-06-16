@@ -1,6 +1,5 @@
 mod berkas_digital;
 
-mod awal_medis_igd_ralan;
 mod billing;
 mod hasil_usg;
 mod kebidanan;
@@ -16,18 +15,16 @@ mod soap;
 mod spri;
 mod triase;
 
-use awal_medis_igd_ralan::render_awal_medis_ralan_igd;
 use berkas_digital::render_berkas_digital_list;
 use billing::render_billing;
 use hasil_usg::render_hasil_usg;
 use kebidanan::render_assesmen_kebidanan;
 use lab::render_lab_list;
 use laporan_operasi::render_laporan_operasi_list;
-use maud::{html, Markup, DOCTYPE};
+use maud::{html, Markup, Render, DOCTYPE};
 use molecule::tricolumn_colon;
 use operasi::render_operasi_list;
 use radiologi::render_radiologi;
-use resume::render_resume;
 use sep::render_sep;
 use signature::render_signature;
 use soap::render_soap_list;
@@ -62,9 +59,7 @@ pub fn render_report(context: &TemplateContext, detail: &DetailRawat) -> Markup 
                 (render_sep(&context,&detail.sep))
                 (detail.spri.as_ref().map(|a|render_spri(context,a)).unwrap_or_default())
                 (render_base(&context,&detail.reg_periksa))
-                (render_resume(context, &detail.resume))
                 (render_soap_list(context,&detail.soap))
-                (detail.igd_ralan.as_ref().map(|a|render_awal_medis_ralan_igd(context, a)).unwrap_or_default())
                 (render_triase(context, &detail.triase))
                 (render_assesmen_kebidanan(context, &detail.assesmen_kebidanan))
                 (render_operasi_list(context, &detail.operasi))
@@ -81,6 +76,16 @@ pub fn render_report(context: &TemplateContext, detail: &DetailRawat) -> Markup 
 }
 
 pub fn render_base(_context: &TemplateContext, reg: &RegPeriksa) -> Markup {
+    let masuk_kamar_inap = reg
+        .waktu_ranap
+        .as_ref()
+        .map(|e| tricolumn_colon("Masuk Ranap", &e.waktu_masuk).render())
+        .unwrap_or_default();
+    let keluar_kamar_inap = reg
+        .waktu_ranap
+        .as_ref()
+        .map(|e| tricolumn_colon("Pulang Ranap", &e.waktu_keluar).render())
+        .unwrap_or_default();
     html! {
         .section {
             .section__title {"Detail Rawat"}
@@ -91,6 +96,8 @@ pub fn render_base(_context: &TemplateContext, reg: &RegPeriksa) -> Markup {
                 (tricolumn_colon("Umur saat Daftar", format!("{} {}",reg.umur_daftar,reg.status_umur)))
                 (tricolumn_colon("Unit/Poliklinik", &reg.nama_poli))
                 (tricolumn_colon("Dokter Poli", &reg.nama_dokter))
+                (masuk_kamar_inap)
+                (keluar_kamar_inap)
             }
         }
     }

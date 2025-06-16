@@ -5,6 +5,7 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates build-essent
 
 ENV CARGO_HOME=/usr/local/cargo
 ENV PATH=/usr/local/cargo/bin:$PATH
+ENV SQLX_OFFLINE=true
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 WORKDIR /app

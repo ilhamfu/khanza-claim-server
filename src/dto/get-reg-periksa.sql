@@ -15,7 +15,17 @@ select
   rp.kd_pj as "kode_pj!",
   pj.png_jawab as "nama_pj!",
   rp.status_lanjut as "status_lanjut!",
-  rp.stts as "status!"
+  rp.stts as "status!",
+  (
+    SELECT
+      JSON_OBJECT(
+        'waktu_masuk',DATE_FORMAT(MIN(TIMESTAMP(tgl_masuk,jam_masuk)),"%d-%m-%Y %H:%i"),
+        'waktu_keluar',DATE_FORMAT(MAX(TIMESTAMP(tgl_keluar,jam_keluar)),"%d-%m-%Y %H:%i")
+      ) as data
+    FROM kamar_inap
+    WHERE no_rawat = rp.no_rawat
+    GROUP BY no_rawat
+  ) as "waktu_ranap:Json<WaktuRanap>"
 from reg_periksa rp
 inner join pasien p on p.no_rkm_medis = rp.no_rkm_medis
 inner join dokter d on d.kd_dokter = rp.kd_dokter

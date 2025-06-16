@@ -42,6 +42,7 @@ pub async fn set_checkup_exported(
     update: chrono::NaiveDateTime,
     status: ExportStatus,
 ) -> sqlx::Result<()> {
+    let mut tx = pool.begin().await?;
     sqlx::query!(
         "insert into gmc_claim__docu_cache (no_rawat,value,status,last_update) values (?,?,?,?) on duplicate key update last_update=VALUES(last_update), status=VALUES(status)",
         no_rawat,
@@ -49,8 +50,9 @@ pub async fn set_checkup_exported(
         status.to_string(),
         update
     )
-    .execute(pool)
-    .await?;
+    .execute(&mut *tx).await?;
+
+    tx.commit().await?;
     Ok(())
 }
 

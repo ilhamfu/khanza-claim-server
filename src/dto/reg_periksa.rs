@@ -1,4 +1,10 @@
-use sqlx::MySqlPool;
+use sqlx::{types::Json, MySqlPool};
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
+pub struct WaktuRanap {
+    pub waktu_masuk: String,
+    pub waktu_keluar: String,
+}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
 pub struct RegPeriksa {
@@ -19,6 +25,7 @@ pub struct RegPeriksa {
     pub nama_pj: String,
     pub status_lanjut: String,
     pub status: String,
+    pub waktu_ranap: Option<Json<WaktuRanap>>,
 }
 
 pub async fn get_reg_periksa(db: &MySqlPool, no_rawat: &str) -> sqlx::Result<Option<RegPeriksa>> {

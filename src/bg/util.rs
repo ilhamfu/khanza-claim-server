@@ -5,7 +5,7 @@ use chrono::Datelike;
 use fantoccini::error::NewSessionError;
 
 use crate::{
-    dto::GetRawatError,
+    dto::DetailRawat,
     report::{render_report, TemplateContext},
     AppContext,
 };
@@ -51,9 +51,9 @@ pub fn get_print_command(
 
 #[derive(Debug, thiserror::Error)]
 pub enum ExportProcessError {
-    #[error("error when creating temp file")]
+    #[error("error when creating temp file : {0}")]
     TempFileNotCreated(#[source] std::io::Error),
-    #[error("error when writing to temp file")]
+    #[error("error when writing to temp file : {0}")]
     TempFileWriteError(#[source] std::io::Error),
     #[error("error when converting temp file path")]
     TempFilePath,
@@ -61,18 +61,18 @@ pub enum ExportProcessError {
     ConvertPageHeight,
     #[error("error when converting values after printing document")]
     ConvertPrintedDocument,
-    #[error("error when decoding printed document from base64")]
+    #[error("error when decoding printed document from base64 : {0}")]
     DecodePrintedDocument(#[source] base64::DecodeError),
-    #[error("error when creating folder for exported document")]
+    #[error("error when creating folder for exported document : {0}")]
     CreateExportedFolder(#[source] std::io::Error),
-    #[error("error when writing to pdf")]
+    #[error("error when writing to pdf : {0}")]
     WriteToPdf(#[source] std::io::Error),
     #[error(transparent)]
     WebDriver(#[from] WebDriverError),
 }
 
 #[derive(Debug, thiserror::Error)]
-#[error("error when running webdriver command: {kind}")]
+#[error("error when running webdriver command when {kind}, {source}")]
 pub struct WebDriverError {
     #[source]
     pub source: fantoccini::error::CmdError,
@@ -98,16 +98,6 @@ impl std::fmt::Display for WebDriverErrorKind {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum ExportCheckupError {
-    #[error("medical checkup is not exists")]
-    MedicalCheckupNotExist,
-    #[error(transparent)]
-    GetRawat(#[from] GetRawatError),
-    #[error(transparent)]
-    ExportProcess(#[from] ExportProcessError),
-}
-
 pub async fn create_client() -> Result<fantoccini::Client, NewSessionError> {
     let mut retry: u32 = 5;
     loop {
@@ -118,7 +108,10 @@ pub async fn create_client() -> Result<fantoccini::Client, NewSessionError> {
                     "goog:chromeOptions".to_owned(),
                     serde_json::json! ({
                         "args":[
-                            "--headless","--disable-gpu","--no-sandbox"
+                            "--headless",
+                            "--disable-gpu",
+                            "--no-sandbox",
+                            "--disable-dev-shm-usage"
                         ]
                     }),
                 );
@@ -143,17 +136,13 @@ pub async fn create_client() -> Result<fantoccini::Client, NewSessionError> {
 pub async fn export_checkup(
     context: &AppContext,
     client: &fantoccini::Client,
-    no_rawat: &str,
-) -> Result<(), ExportCheckupError> {
-    let Some(reg_perika) = crate::dto::get_rawat(&context.pool, no_rawat).await? else {
-        return Err(ExportCheckupError::MedicalCheckupNotExist);
-    };
-
+    reg_periksa: &DetailRawat,
+) -> Result<(), ExportProcessError> {
     let template_context = TemplateContext {
         config: &context.config.app_config,
     };
 
-    let html = render_report(&template_context, &reg_perika);
+    let html = render_report(&template_context, reg_periksa);
 
     let mut temp_file = tempfile::Builder::new()
         .prefix("checkup-")
@@ -212,17 +201,17 @@ pub async fn export_checkup(
         .as_str()
         .map(ToOwned::to_owned)
     else {
-        return Err(ExportProcessError::ConvertPrintedDocument.into());
+        return Err(ExportProcessError::ConvertPrintedDocument);
     };
 
     let decoded = BASE64_STANDARD
         .decode(res)
         .map_err(ExportProcessError::DecodePrintedDocument)?;
 
-    let year = reg_perika.reg_periksa.tgl_registrasi.year();
-    let month_1 = reg_perika.reg_periksa.tgl_registrasi.month();
-    let month = MONTH_NAME[reg_perika.reg_periksa.tgl_registrasi.month0() as usize];
-    let typ = reg_perika.reg_periksa.status_lanjut;
+    let year = reg_periksa.reg_periksa.tgl_registrasi.year();
+    let month_1 = reg_periksa.reg_periksa.tgl_registrasi.month();
+    let month = MONTH_NAME[reg_periksa.reg_periksa.tgl_registrasi.month0() as usize];
+    let typ = &reg_periksa.reg_periksa.status_lanjut;
 
     tokio::fs::create_dir_all(format!("./exported/{year}/{month_1:02}-{month}//{typ}/"))
         .await
@@ -230,7 +219,7 @@ pub async fn export_checkup(
     tokio::fs::write(
         format!(
             "./exported/{year}/{month_1:02}-{month}/{typ}/{}-{}.pdf",
-            reg_perika.reg_periksa.no_rm, reg_perika.sep.no_sep,
+            reg_periksa.reg_periksa.no_rm, reg_periksa.sep.no_sep,
         ),
         &decoded,
     )

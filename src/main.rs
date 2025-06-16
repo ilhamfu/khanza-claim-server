@@ -76,8 +76,6 @@ async fn run_command(
         })
     };
 
-    println!("is this running 2");
-
     let mut cmd = tokio::process::Command::new("chromedriver")
         .arg("--port=4444")
         .process_group(0)

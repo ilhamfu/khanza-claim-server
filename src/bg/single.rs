@@ -15,7 +15,7 @@ use crate::{
     AppContext,
 };
 
-use super::util::{create_client, export_checkup, ExportCheckupError};
+use super::util::{create_client, export_checkup};
 
 pub async fn export_one(
     context: Arc<AppContext>,
@@ -49,32 +49,37 @@ pub async fn export_one(
     if run || force {
         let client = create_client().await?;
 
-        let status = match export_checkup(&context, &client, no_rawat).await {
-            Err(ExportCheckupError::GetRawat(GetRawatError::Process(err))) => {
-                // TODO: refactor to remove `anyhow`
-                return Err(err).context("error disini");
+        let status = 'a: {
+            let reg_periksa = match crate::dto::get_rawat(&context.pool, no_rawat).await {
+                Ok(Some(val)) => val,
+                Ok(None) => {
+                    tracing::warn!(
+                        missing = "document not found",
+                        "Export aborted: missing required document"
+                    );
+                    break 'a ExportStatus::NotComplete;
+                }
+                Err(GetRawatError::Process(_err)) => {
+                    todo!("add handler")
+                }
+                Err(GetRawatError::Constraint(err)) => {
+                    tracing::warn!(missing = %err,no_rawat=%no_rawat,%now, "Export aborted: missing required document");
+                    break 'a ExportStatus::NotComplete;
+                }
+            };
+            match export_checkup(&context, &client, &reg_periksa).await {
+                Err(_err) => {
+                    todo!("add handler")
+                }
+                Ok(()) => {
+                    tracing::info!( no_rawat=%no_rawat, "Export success");
+                    break 'a ExportStatus::Success;
+                }
             }
-            Err(ExportCheckupError::ExportProcess(err)) => {
-                // TODO: refactor to remove `anyhow`
-                return Err(err).context("error disini");
-            }
-            Err(ExportCheckupError::GetRawat(GetRawatError::Constraint(err))) => {
-                tracing::warn!(missing = %err, "Export aborted: missing required document");
-                ExportStatus::NotComplete
-            }
-            Err(ExportCheckupError::MedicalCheckupNotExist) => {
-                tracing::warn!(
-                    missing = "document not found",
-                    "Export aborted: missing required document"
-                );
-                ExportStatus::NotComplete
-            }
-            Ok(()) => ExportStatus::Success,
         };
         set_checkup_exported(&context.pool, no_rawat, now, status)
             .await
             .context("error when updating exported checkup date")?;
     }
-
     Ok(())
 }

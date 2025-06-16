@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Timelike};
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    bg::util::{export_checkup, ExportCheckupError},
+    bg::util::export_checkup,
     dto::{
         extra::{get_not_exported_completed_checkup, set_checkup_exported, ExportStatus},
         GetRawatError, GetRawatProcessError,
@@ -16,14 +16,20 @@ use super::util::{create_client, ExportProcessError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ExportRangeError {
-    #[error("error when getting non-exported medical checkup: ")]
-    GetNotExportedComplete(#[source] sqlx::Error),
-    #[error("error when getting non-exported medical checkup: ")]
-    GetRawatProcess(#[from] GetRawatProcessError),
-    #[error("error when exporting medical checkup: ")]
-    ExportProcess(#[from] ExportProcessError),
-    #[error("error when adding record to log: ")]
-    Marking(#[source] sqlx::Error),
+    #[error(transparent)]
+    GetNotExportedComplete(sqlx::Error),
+    #[error("error when getting document {no_rawat} : {source}")]
+    GetRawatProcess {
+        source: GetRawatProcessError,
+        no_rawat: String,
+    },
+    #[error("error when exporting document {no_rawat} : {source}")]
+    ExportProcess {
+        source: ExportProcessError,
+        no_rawat: String,
+    },
+    #[error(transparent)]
+    Marking(sqlx::Error),
 }
 
 async fn export_each(
@@ -41,22 +47,38 @@ async fn export_each(
     let len = no_rawat_list.len();
 
     for no_rawat in no_rawat_list {
-        let status = match export_checkup(context, client, &no_rawat).await {
-            Err(ExportCheckupError::GetRawat(GetRawatError::Process(err))) => {
-                return Some(Err(err.into()))
-            }
-            Err(ExportCheckupError::ExportProcess(err)) => return Some(Err(err.into())),
-            Err(ExportCheckupError::GetRawat(GetRawatError::Constraint(err))) => {
-                tracing::warn!(missing = %err,no_rawat=%no_rawat, "Export aborted: missing required document");
-                ExportStatus::NotComplete
-            }
-            Err(ExportCheckupError::MedicalCheckupNotExist) => {
-                tracing::warn!(missing = "document not found", no_rawat=%no_rawat, "Export Aborted: missing required document");
-                ExportStatus::NotComplete
-            }
-            Ok(()) => {
-                tracing::info!( no_rawat=%no_rawat, "Export success");
-                ExportStatus::Success
+        let status = 'a: {
+            let reg_periksa = match crate::dto::get_rawat(&context.pool, &no_rawat).await {
+                Ok(Some(val)) => val,
+                Ok(None) => {
+                    tracing::warn!(
+                        missing = "document not found",
+                        "Export aborted: missing required document"
+                    );
+                    break 'a ExportStatus::NotComplete;
+                }
+                Err(GetRawatError::Process(err)) => {
+                    return Some(Err(ExportRangeError::GetRawatProcess {
+                        source: err,
+                        no_rawat: no_rawat.to_owned(),
+                    }))
+                }
+                Err(GetRawatError::Constraint(err)) => {
+                    tracing::warn!(missing = %err,no_rawat=%no_rawat,%export_date, "Export aborted: missing required document");
+                    break 'a ExportStatus::NotComplete;
+                }
+            };
+            match export_checkup(context, client, &reg_periksa).await {
+                Err(err) => {
+                    return Some(Err(ExportRangeError::ExportProcess {
+                        source: err,
+                        no_rawat: no_rawat.to_owned(),
+                    }))
+                }
+                Ok(()) => {
+                    tracing::info!( no_rawat=%no_rawat, "Export success");
+                    break 'a ExportStatus::Success;
+                }
             }
         };
 
@@ -79,7 +101,10 @@ pub async fn export_range(
     to: NaiveDate,
 ) -> Result<(), fantoccini::error::NewSessionError> {
     let client = create_client().await?;
-    let now = chrono::Local::now().naive_utc();
+    let now = chrono::Local::now()
+        .naive_utc()
+        .with_nanosecond(0)
+        .expect("error lur");
 
     let from_text = from.format("%d-%m-%Y");
     let to_text = to.format("%d-%m-%Y");
@@ -89,7 +114,6 @@ pub async fn export_range(
 
     while let Some(val) = export_each(&context, &client, now, from, to).await {
         if let Err(err) = val {
-            println!("{err:?}");
             tracing::error!(%err,"exporting document failed");
         }
 
