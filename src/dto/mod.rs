@@ -111,8 +111,6 @@ pub enum GetRawatProcessError {
     DpjpRanap(#[source] sqlx::Error),
     #[error("failed to fetch soap : {0}")]
     Soap(#[source] sqlx::Error),
-    #[error("failed to fetch assesmen_awal_igd : {0}")]
-    AssesmenAwalIgd(#[source] sqlx::Error),
 }
 
 pub async fn get_rawat(
