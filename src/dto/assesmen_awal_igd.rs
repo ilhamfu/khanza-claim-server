@@ -44,7 +44,7 @@ pub async fn get_assesmen_awal_igd(
     pool: &sqlx::MySqlPool,
     rp: &RegPeriksa,
 ) -> sqlx::Result<Option<AssesmenAwalIGD>> {
-    if rp.status_lanjut == "Ranap" && rp.kode_poli != "IGDK" {
+    if rp.status_lanjut == "Ranap" || rp.kode_poli != "IGDK" {
         return Ok(None);
     }
     sqlx::query_file_as!(

@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use assesmen_awal_igd::{get_assesmen_awal_igd, AssesmenAwalIGD};
 use assesmen_kebidanan::{get_assesmen_bidan, AssesmenKebidanan};
 use berkas_digital::{get_berkas_digital, BerkasDigial};
 use billing::{get_billing, Billing, GetBillingError};
@@ -18,9 +19,11 @@ use spri::{get_spri, Spri};
 use sqlx::MySqlPool;
 use triase::{get_triase, Triase};
 
+pub mod assesmen_awal_igd;
 pub mod assesmen_kebidanan;
 pub mod berkas_digital;
 pub mod billing;
+pub mod dpjp_ranap;
 pub mod extra;
 pub mod hasil_usg;
 pub mod lab;
@@ -33,8 +36,6 @@ pub mod sep;
 pub mod soap;
 pub mod spri;
 pub mod triase;
-
-pub mod dpjp_ranap;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct DetailRawat {
@@ -53,6 +54,7 @@ pub struct DetailRawat {
     pub hasil_usg: Option<HasilUsg>,
     pub dpjp_ranap: Vec<DpjpRanap>,
     pub soap: Vec<Soap>,
+    pub assesmen_igd: Option<AssesmenAwalIGD>,
 }
 
 impl Display for DetailRawat {
@@ -111,6 +113,8 @@ pub enum GetRawatProcessError {
     DpjpRanap(#[source] sqlx::Error),
     #[error("failed to fetch soap : {0}")]
     Soap(#[source] sqlx::Error),
+    #[error("failed to fetch assesmen_awal_igd : {0}")]
+    AssesmenAwalIgd(#[source] sqlx::Error),
 }
 
 pub async fn get_rawat(
@@ -143,6 +147,8 @@ pub async fn get_rawat(
 
     let dpjp_ranap = get_dpjp_ranap(db, no_rawat).map_err(GetRawatProcessError::DpjpRanap);
     let soap = get_soap(db, &periksa).map_err(GetRawatProcessError::Soap);
+    let assesmen_igd =
+        get_assesmen_awal_igd(db, &periksa).map_err(GetRawatProcessError::AssesmenAwalIgd);
 
     let (
         sep,
@@ -159,6 +165,7 @@ pub async fn get_rawat(
         usg,
         dpjp_ranap,
         soap,
+        assesmen_igd,
     ) = tokio::try_join!(
         sep,
         spri,
@@ -174,6 +181,7 @@ pub async fn get_rawat(
         usg,
         dpjp_ranap,
         soap,
+        assesmen_igd
     )?;
 
     let Some(sep) = sep else {
@@ -204,6 +212,7 @@ pub async fn get_rawat(
         hasil_usg: usg,
         dpjp_ranap,
         soap,
+        assesmen_igd,
     };
 
     Ok(Some(rawat))

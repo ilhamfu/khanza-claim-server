@@ -1,5 +1,6 @@
 mod berkas_digital;
 
+mod awal_medis_igd_ralan;
 mod billing;
 mod hasil_usg;
 mod kebidanan;
@@ -15,6 +16,7 @@ mod soap;
 mod spri;
 mod triase;
 
+use awal_medis_igd_ralan::render_awal_medis_ralan_igd;
 use berkas_digital::render_berkas_digital_list;
 use billing::render_billing;
 use hasil_usg::render_hasil_usg;
@@ -46,6 +48,7 @@ pub fn render_report(context: &TemplateContext, detail: &DetailRawat) -> Markup 
         detail.sep.no_rm.as_deref().unwrap_or_default(),
         detail.sep.no_sep
     );
+
     html! {
         (DOCTYPE)
         html{
@@ -60,6 +63,7 @@ pub fn render_report(context: &TemplateContext, detail: &DetailRawat) -> Markup 
                 (detail.spri.as_ref().map(|a|render_spri(context,a)).unwrap_or_default())
                 (render_base(&context,&detail.reg_periksa))
                 (render_soap_list(context,&detail.soap))
+                (detail.assesmen_igd.as_ref().map(|item|render_awal_medis_ralan_igd(context, item)).unwrap_or_default())
                 (render_triase(context, &detail.triase))
                 (render_assesmen_kebidanan(context, &detail.assesmen_kebidanan))
                 (render_operasi_list(context, &detail.operasi))

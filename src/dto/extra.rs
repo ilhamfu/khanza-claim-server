@@ -52,6 +52,13 @@ pub async fn set_checkup_exported(
     )
     .execute(&mut *tx).await?;
 
+    sqlx::query!(
+        "update reg_periksa set stts_cetak_sep = 'Sudah' where no_rawat = ?",
+        no_rawat
+    )
+    .execute(&mut *tx)
+    .await?;
+
     tx.commit().await?;
     Ok(())
 }
