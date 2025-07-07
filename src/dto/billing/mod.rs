@@ -10,6 +10,10 @@ mod util;
 pub use ralan::BillingRalan;
 pub use ranap::BillingRanap;
 
+pub trait Total {
+    fn subtotal(&self) -> f64;
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct BillingFormat {
     pub detail: String,

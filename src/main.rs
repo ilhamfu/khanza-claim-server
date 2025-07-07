@@ -1,7 +1,7 @@
 use std::{process::Stdio, sync::Arc};
 
 use anyhow::{Context, Ok};
-use bg::{export_one, export_range};
+use bg::{export_one, export_range, export_raw};
 use clap::Parser;
 use cli::{
     KhanzaKlaimExportSubcommand, KhanzaKlaimParser, KhanzaKlaimRunSubcommand, KhanzaKlaimSubcommand,
@@ -9,6 +9,7 @@ use cli::{
 use config::Config;
 use logger::init_logger;
 use sqlx::MySqlPool;
+use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 mod bg;
@@ -60,22 +61,41 @@ async fn run_command(
     command: KhanzaKlaimSubcommand,
 ) -> anyhow::Result<()> {
     let app_context = app_context.clone();
-
-    let res = {
-        let token = cancel_token.clone();
-        tokio::task::spawn(async move {
-            match command {
-                KhanzaKlaimSubcommand::Run(KhanzaKlaimRunSubcommand { to, from, .. }) => {
+    let token = cancel_token.clone();
+    match command {
+        KhanzaKlaimSubcommand::Run(KhanzaKlaimRunSubcommand { to, from, .. }) => {
+            start_with_driver(
+                token.clone(),
+                tokio::task::spawn(async move {
                     export_range(token.clone(), app_context, from, to).await?;
-                }
-                KhanzaKlaimSubcommand::Export(KhanzaKlaimExportSubcommand { no_rawat, force }) => {
+                    Ok(())
+                }),
+            )
+            .await?;
+        }
+        KhanzaKlaimSubcommand::Export(KhanzaKlaimExportSubcommand { no_rawat, force }) => {
+            start_with_driver(
+                token.clone(),
+                tokio::task::spawn(async move {
                     export_one(app_context, &no_rawat, force).await?;
-                }
-            };
-            Ok(())
-        })
+                    Ok(())
+                }),
+            )
+            .await?;
+        }
+        KhanzaKlaimSubcommand::Raw(cli::KhanzaKlaimRawCommand { no_rawat }) => {
+            export_raw(&app_context, &no_rawat).await?;
+            token.cancel();
+        }
     };
 
+    Ok(())
+}
+
+async fn start_with_driver<A>(
+    cancel_token: CancellationToken,
+    join_handle: JoinHandle<A>,
+) -> anyhow::Result<()> {
     let mut cmd = tokio::process::Command::new("chromedriver")
         .arg("--port=4444")
         .process_group(0)
@@ -84,7 +104,7 @@ async fn run_command(
         .spawn()?;
 
     tokio::select! {
-        _= res => {
+        _= join_handle => {
             tracing::info!("killing webdriver");
             cmd.kill().await.context("error when killing child process")?;
             cancel_token.cancel();

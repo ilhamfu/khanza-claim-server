@@ -1,7 +1,7 @@
 use maud::{html, Markup};
 
 use crate::{
-    dto::billing::BillingRanap,
+    dto::billing::{BillingRanap, Total},
     report::{
         billing::{format_money, format_qty},
         TemplateContext,
@@ -53,6 +53,10 @@ pub fn render_billing_ranap(_context: &TemplateContext, ralan: &BillingRanap) ->
                             }
                         }
                     }
+                    .billing__item.billing__item--important {
+                        .item.billing__item--important {"Subtotal : Kamar Inap"}
+                        .total {(format_money(ralan.kamar.subtotal()))}
+                    }
                 }
 
                 @if !ralan.pem_ralan.is_empty() {
@@ -67,6 +71,10 @@ pub fn render_billing_ranap(_context: &TemplateContext, ralan: &BillingRanap) ->
                             .total {(format_money(i.total))}
                         }
                     }
+                    .billing__item.billing__item--important {
+                        .item.billing__item--important {"Subtotal : Pemeriksaan dan Tindakan Rawat Jalan"}
+                        .total {(format_money(ralan.pem_ralan.subtotal()))}
+                    }
                 }
                 @if !ralan.pem_ranap.is_empty() {
                     .billing__item.billing__item--important {
@@ -80,6 +88,10 @@ pub fn render_billing_ranap(_context: &TemplateContext, ralan: &BillingRanap) ->
                             .total {(format_money(i.total))}
                         }
                     }
+                    .billing__item.billing__item--important {
+                        .item.billing__item--important {"Subtotal : Pemeriksaan dan Tindakan Rawat Inap"}
+                        .total {(format_money(ralan.pem_ranap.subtotal()))}
+                    }
                 }
                 @if !ralan.rad.is_empty(){
                     .billing__item.billing__item--important {
@@ -92,6 +104,10 @@ pub fn render_billing_ranap(_context: &TemplateContext, ralan: &BillingRanap) ->
                             .cost {(i.price.map(format_money).unwrap_or_default())}
                             .total {(format_money(i.total))}
                         }
+                    }
+                    .billing__item.billing__item--important {
+                        .item.billing__item--important {"Subtotal : Pemeriksaan Radiologi"}
+                        .total {(format_money(ralan.rad.subtotal()))}
                     }
                 }
                 @if !ralan.lab.is_empty(){
@@ -107,6 +123,10 @@ pub fn render_billing_ranap(_context: &TemplateContext, ralan: &BillingRanap) ->
                             .total {(format_money(i.total))}
                         }
                     }
+                    .billing__item.billing__item--important {
+                        .item.billing__item--important {"Subtotal : Pemeriksaan Lab"}
+                        .total {(format_money(ralan.lab.subtotal()))}
+                    }
                 }
                 @if !ralan.operasi.is_empty(){
                     .billing__item.billing__item--important {
@@ -117,6 +137,10 @@ pub fn render_billing_ranap(_context: &TemplateContext, ralan: &BillingRanap) ->
                             .item {(i.detail)}
                             .total {(format_money(i.total))}
                         }
+                    }
+                    .billing__item.billing__item--important {
+                        .item.billing__item--important {"Subtotal : Pemeriksaan Operasi"}
+                        .total {(format_money(ralan.operasi.subtotal()))}
                     }
                 }
                 @if !ralan.obat_op.is_empty(){
@@ -131,6 +155,10 @@ pub fn render_billing_ranap(_context: &TemplateContext, ralan: &BillingRanap) ->
                             .total {(format_money(i.total))}
                         }
                     }
+                    .billing__item.billing__item--important {
+                        .item.billing__item--important {"Subtotal : Obat & BHP Operasi"}
+                        .total {(format_money(ralan.obat_op.subtotal()))}
+                    }
                 }
                 @if !ralan.obat.is_empty(){
                     .billing__item.billing__item--important {
@@ -143,6 +171,11 @@ pub fn render_billing_ranap(_context: &TemplateContext, ralan: &BillingRanap) ->
                             .cost {(i.price.map(format_money).unwrap_or_default())}
                             .total {(format_money(i.total))}
                         }
+                    }
+
+                    .billing__item.billing__item--important {
+                        .item.billing__item--important {"Subtotal : Obat & BHP"}
+                        .total {(format_money(ralan.obat.subtotal()))}
                     }
                 }
                 .billing__item.billing__item--important style="margin-top:0.25rem;padding-top:0.25rem;" {

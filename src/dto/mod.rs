@@ -13,6 +13,7 @@ use operasi::{get_operasi, Operasi};
 use radiologi::{get_pemeriksaan_radiologi, PemeriksaanRadiologi};
 use reg_periksa::{get_reg_periksa, RegPeriksa};
 use resume::{get_resume, Resume};
+use rujukan_penuh::{get_rujukan_penuh, RujukanPenuh};
 use sep::{get_sep, Sep};
 use soap::{get_soap, Soap};
 use spri::{get_spri, Spri};
@@ -32,6 +33,7 @@ pub mod operasi;
 pub mod radiologi;
 pub mod reg_periksa;
 pub mod resume;
+pub mod rujukan_penuh;
 pub mod sep;
 pub mod soap;
 pub mod spri;
@@ -55,6 +57,7 @@ pub struct DetailRawat {
     pub dpjp_ranap: Vec<DpjpRanap>,
     pub soap: Vec<Soap>,
     pub assesmen_igd: Option<AssesmenAwalIGD>,
+    pub rujukan_penuh: Option<RujukanPenuh>,
 }
 
 impl Display for DetailRawat {
@@ -115,6 +118,8 @@ pub enum GetRawatProcessError {
     Soap(#[source] sqlx::Error),
     #[error("failed to fetch assesmen_awal_igd : {0}")]
     AssesmenAwalIgd(#[source] sqlx::Error),
+    #[error("failed to fetch rujukan_penuh : {0}")]
+    RujukanPenuh(#[source] sqlx::Error),
 }
 
 pub async fn get_rawat(
@@ -184,6 +189,14 @@ pub async fn get_rawat(
         assesmen_igd
     )?;
 
+    let rujukan_penuh = if let Some(ref item) = sep {
+        get_rujukan_penuh(db, &item.no_sep)
+            .map_err(GetRawatProcessError::RujukanPenuh)
+            .await?
+    } else {
+        None
+    };
+
     let Some(sep) = sep else {
         return Err(GetRawatConstraintError::SepNotFound.into());
     };
@@ -213,6 +226,7 @@ pub async fn get_rawat(
         dpjp_ranap,
         soap,
         assesmen_igd,
+        rujukan_penuh,
     };
 
     Ok(Some(rawat))

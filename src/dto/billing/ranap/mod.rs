@@ -10,7 +10,7 @@ use crate::dto::billing::{
     GetBillingErrorKind,
 };
 
-use super::{BillingFormat, GetBillingError};
+use super::{BillingFormat, GetBillingError, Total};
 
 async fn get_pemeriksaan_dokter_ranap(
     pool: &sqlx::MySqlPool,
@@ -174,24 +174,34 @@ pub struct BillingRanap {
     pub retur_obat: Vec<BillingFormat>,
 }
 
+impl Total for Vec<BillingFormat> {
+    fn subtotal(&self) -> f64 {
+        self.iter().fold(0f64, |prev, item| prev + item.total)
+    }
+}
+
+impl Total for Vec<(BillingFormat, Vec<BillingFormat>, Vec<BillingFormat>)> {
+    fn subtotal(&self) -> f64 {
+        self.iter().fold(0f64, |prev, curr| {
+            prev + curr.0.total + curr.1.subtotal() + curr.2.subtotal()
+        })
+    }
+}
+
 impl BillingRanap {
     pub fn sum(&self) -> f64 {
         let mut res = 0f64;
         res += self.reg.total;
-        res = self.kamar.iter().fold(res, |acc, pre| {
-            acc + pre.0.total
-                + pre.1.iter().fold(0f64, |a, b| a + b.total)
-                + pre.2.iter().fold(0f64, |a, b| a + b.total)
-        });
-        res = self.pem_ralan.iter().fold(res, |acc, val| acc + val.total);
-        res = self.pem_ranap.iter().fold(res, |acc, val| acc + val.total);
-        res = self.rad.iter().fold(res, |acc, val| acc + val.total);
-        res = self.lab.iter().fold(res, |acc, val| acc + val.total);
-        res = self.operasi.iter().fold(res, |acc, val| acc + val.total);
-        res = self.obat.iter().fold(res, |acc, val| acc + val.total);
-        res = self.retur_obat.iter().fold(res, |acc, val| acc + val.total);
+        res += self.kamar.subtotal();
+        res += self.pem_ralan.subtotal();
+        res += self.pem_ranap.subtotal();
+        res += self.rad.subtotal();
+        res += self.lab.subtotal();
+        res += self.operasi.subtotal();
+        res += self.obat.subtotal();
+        res += self.retur_obat.subtotal();
 
-        self.obat_op.iter().fold(res, |acc, val| acc + val.total)
+        res + self.obat_op.subtotal()
     }
 }
 

@@ -1,0 +1,79 @@
+.surat-rujuk {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  border: solid black 1px;
+  margin-inline: 0.5rem;
+  border-radius: 4px;
+  padding: 0.5rem;
+
+  font-size: 12px;
+}
+
+.surat-rujuk__haeder {
+  display: flex;
+  flex-direction: column;
+}
+
+.surat-rujuk__title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.surat-rujuk__subtitle {
+  text-align: center;
+  font-size: 12px;
+}
+
+.surat-rujuk__top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.surat-rujuk__extra {
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+}
+
+.surat-rujuk__detail,
+.surat-rujuk__patient > div {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  & > .tricolumn {
+    grid-column: 1/4;
+    & > div:nth-child(2) {
+      padding-inline: 2rem;
+    }
+  }
+}
+.surat-rujuk__patient {
+  display: grid;
+  align-items: start;
+  column-gap: 8px;
+  grid-template-columns: repeat(5, minmax(100px, 1fr));
+
+  & > div:nth-child(1) {
+    grid-column: 1/4;
+  }
+  & > div:nth-child(2) {
+    grid-column: 4/6;
+  }
+}
+
+.surat-rujuk__detail {
+  justify-self: end;
+}
+
+.surat-rujuk__footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.surat-rujuk__signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

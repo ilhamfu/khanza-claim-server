@@ -20,6 +20,7 @@ pub struct KhanzaKlaimParser {
 
 #[derive(Debug, Subcommand)]
 pub enum KhanzaKlaimSubcommand {
+    Raw(KhanzaKlaimRawCommand),
     Run(KhanzaKlaimRunSubcommand),
     Export(KhanzaKlaimExportSubcommand),
 }
@@ -36,6 +37,13 @@ pub struct KhanzaKlaimRunSubcommand {
 
     #[arg(short)]
     pub force: bool,
+}
+
+#[derive(Debug, Parser)]
+/// run exporter for single medical record and print it as raw html
+pub struct KhanzaKlaimRawCommand {
+    #[arg()]
+    pub no_rawat: String,
 }
 
 #[derive(Debug, Parser)]

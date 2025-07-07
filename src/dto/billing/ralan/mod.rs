@@ -5,6 +5,7 @@ use crate::dto::billing::GetBillingErrorKind;
 
 use super::util::*;
 use super::BillingFormat;
+use super::Total;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct BillingRalan {
@@ -21,13 +22,13 @@ impl BillingRalan {
     pub fn sum(&self) -> f64 {
         let mut res = 0f64;
         res += self.reg.total;
-        res = self.pem.iter().fold(res, |acc, val| acc + val.total);
-        res = self.rad.iter().fold(res, |acc, val| acc + val.total);
-        res = self.lab.iter().fold(res, |acc, val| acc + val.total);
-        res = self.operasi.iter().fold(res, |acc, val| acc + val.total);
-        res = self.obat.iter().fold(res, |acc, val| acc + val.total);
+        res += self.pem.subtotal();
+        res += self.rad.subtotal();
+        res += self.lab.subtotal();
+        res += self.operasi.subtotal();
+        res += self.obat.subtotal();
 
-        self.obat_op.iter().fold(res, |acc, val| acc + val.total)
+        res + self.obat_op.subtotal()
     }
 }
 

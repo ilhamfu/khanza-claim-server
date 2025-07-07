@@ -34,14 +34,14 @@ pub fn render_sep(context: &TemplateContext, sep: &Sep) -> Markup {
             .sep__body {
                 .sep__body-section.sep__body-section--left{
                     (tricolumn_colon("No. SEP", &sep.no_sep))
-                    (tricolumn_colon("Tgl. SEP", &sep.tanggal_sep.as_ref().map(|a|a.format("%A, %-d %B %C%y").to_string())))
+                    (tricolumn_colon("Tgl. SEP", &sep.tanggal_sep.as_ref().map(|a|a.format("%A, %d %B %C%y").to_string())))
                     (tricolumn_colon("Nama Peserta", format!("{} ({})",sep.nama_pasien.as_deref().unwrap_or_default(),sep.jk.as_deref().unwrap_or_default())))
                     (tricolumn_colon("Tanggal Lahir", &sep.tanggal_lahir.as_ref().map(|a|a.format("%A, %-d %B %C%y").to_string())))
                     (tricolumn_colon("No. Telp", &sep.no_telp))
                     (tricolumn_colon("Sub/Spesialis", &sep.nama_poli_tujuan))
                     (tricolumn_colon("Dokter", &sep.nama_dpjp))
                     (tricolumn_colon("Faskes Perujuk", &sep.nama_ppk_rujukan))
-                    (tricolumn_colon("Diagnosa Awal", &sep.nama_ppk_rujukan))
+                    (tricolumn_colon("Diagnosa Awal", &sep.nama_diagnosa_awal))
                     (tricolumn_colon("Catatan", &sep.catatan))
                 }
                 .sep__body-section.sep__body-section--right{

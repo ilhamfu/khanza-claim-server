@@ -10,6 +10,7 @@ mod molecule;
 mod operasi;
 mod radiologi;
 mod resume;
+mod rujuk_penuh;
 mod sep;
 mod signature;
 mod soap;
@@ -23,10 +24,11 @@ use hasil_usg::render_hasil_usg;
 use kebidanan::render_assesmen_kebidanan;
 use lab::render_lab_list;
 use laporan_operasi::render_laporan_operasi_list;
-use maud::{html, Markup, Render, DOCTYPE};
+use maud::{html, Markup, PreEscaped, Render, DOCTYPE};
 use molecule::tricolumn_colon;
 use operasi::render_operasi_list;
 use radiologi::render_radiologi;
+use rujuk_penuh::render_rujuk_penuh;
 use sep::render_sep;
 use signature::render_signature;
 use soap::render_soap_list;
@@ -61,6 +63,7 @@ pub fn render_report(context: &TemplateContext, detail: &DetailRawat) -> Markup 
             body{
                 (render_sep(&context,&detail.sep))
                 (detail.spri.as_ref().map(|a|render_spri(context,a)).unwrap_or_default())
+                (detail.rujukan_penuh.as_ref().map(|a|render_rujuk_penuh(context, a)).unwrap_or_default())
                 (render_base(&context,&detail.reg_periksa))
                 (render_soap_list(context,&detail.soap))
                 (detail.assesmen_igd.as_ref().map(|item|render_awal_medis_ralan_igd(context, item)).unwrap_or_default())

@@ -46,7 +46,7 @@ pub async fn set_checkup_exported(
     sqlx::query!(
         "insert into gmc_claim__docu_cache (no_rawat,value,status,last_update) values (?,?,?,?) on duplicate key update last_update=VALUES(last_update), status=VALUES(status)",
         no_rawat,
-        "",
+        "null",
         status.to_string(),
         update
     )
